@@ -6,7 +6,7 @@
 
 WiFiClient espClient;
 PubSubClient client(espClient);
- DynamicJsonDocument doc(1024);
+DynamicJsonDocument doc(1024);
 WiFiUDP udp;
 
 boolean  rev_flag =  false;
@@ -77,20 +77,18 @@ void reconnect() {
   }
 }
 
-
-void setup() {
-  Serial.begin(115200);
-
-  //Init WiFi as Station, start SmartConfig
+void setNet(){
+  // Init WiFi as Station, start SmartConfig
   WiFi.mode(WIFI_AP_STA);
-  WiFi.beginSmartConfig();
 
   //Wait for SmartConfig packet from mobile
   Serial.println("Waiting for SmartConfig.");
+  WiFi.beginSmartConfig();
   while (!WiFi.smartConfigDone()) {
     delay(500);
     Serial.print(".");
   }
+  WiFi.mode(WIFI_STA);
 
   Serial.println("");
   Serial.println("SmartConfig received.");
@@ -109,18 +107,29 @@ void setup() {
 
 
 
+  delay(1500);
+}
+
+void setup() {
+
+  pinMode(0,INPUT);
+
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin();
+  WiFi.setAutoConnect(true);
   client.setServer("www.fenghuazhengmao.top", 1882);
   client.setCallback(callback);
-
   udp.begin(9);
-
-  delay(1500);
-
 }
 
 void loop() {
+  if(digitalRead(0) == LOW){
+    setNet();
+  }
+//  Serial.println(WiFi.isConnected());
   // put your main code here, to run repeatedly:
-  if (!client.connected()) {
+  if (WiFi.isConnected()&&!client.connected()) {
     reconnect();
   }
   client.loop();
